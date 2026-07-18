@@ -3,10 +3,9 @@ import { sendMessage } from 'webext-bridge/content-script';
 import * as yup from 'yup';
 
 import GenericGameManager from './generic';
-import type { BaseColumnMapping, CommonParsedRowFields } from './generic';
+import type { BaseColumnMapping } from './generic';
 import { compareNormalized } from '../../../../utils';
 import type { TranslationKey } from '../../../../utils';
-import { parseBoolean } from '../utils';
 
 async function getMTGJSONDataImpl() {
   // We can't fetch inside the content script, so we delegate to the background with messages
@@ -24,23 +23,22 @@ async function matchSetToCardmarketIdImpl(set: string) {
 
 const matchSetToCardmarketId = memoize(matchSetToCardmarketIdImpl);
 
-const foilElSelector = 'td input[name^="isFoil"]';
-
-class MtgGameManager extends GenericGameManager<'set' | 'isFoil', { set: string, isFoil: boolean }> {
-  extraColumns: Record<'set' | 'isFoil', TranslationKey> = {
+// Foil is handled generically by GenericGameManager (the `isFoil` base column
+// fills the same `input[name^="isFoil"]` checkbox on every game that has it),
+// so MTG only needs to add its own `set` column here.
+class MtgGameManager extends GenericGameManager<'set', { set: string }> {
+  extraColumns: Record<'set', TranslationKey> = {
     set: 'injectedButton.gameManagers.mtg.importCsvForm.set.label',
-    isFoil: 'injectedButton.gameManagers.mtg.importCsvForm.isFoil.label',
   };
 
   extraValidationSchema = yup.object({
     set: yup.string(),
-    isFoil: yup.string(),
   });
 
   async parseRow(
     id: number,
     rawRowData: Record<string, unknown>,
-    columnMapping: BaseColumnMapping & { set: string | undefined, isFoil: string | undefined },
+    columnMapping: BaseColumnMapping & { set: string | undefined },
   ) {
     const parsedData = await super.parseRow(id, rawRowData, columnMapping);
     let set = columnMapping['set'] ? String(rawRowData[columnMapping['set']]) : '';
@@ -59,25 +57,12 @@ class MtgGameManager extends GenericGameManager<'set' | 'isFoil', { set: string,
     return {
       ...parsedData,
       set: set,
-      isFoil: !!columnMapping['isFoil']
-        && parseBoolean(String(rawRowData[columnMapping['isFoil']]), ['foil']),
       enabled,
     };
   }
 
-  async fillRow(
-    trEl: HTMLTableRowElement,
-    row: (CommonParsedRowFields & { set: string, isFoil: boolean }),
-  ): Promise<HTMLTableRowElement> {
-    const resolvedEl = await super.fillRow(trEl, row);
-    const foilEl: HTMLInputElement = resolvedEl.querySelector(foilElSelector)!;
-    foilEl.checked = row.isFoil;
-    return resolvedEl;
-  };
-
-  extraTableColumns: Record<'set' | 'isFoil', TranslationKey> = {
+  extraTableColumns: Record<'set', TranslationKey> = {
     set: 'injectedButton.gameManagers.mtg.selectRowsFormTable.set',
-    isFoil: 'injectedButton.gameManagers.mtg.selectRowsFormTable.isFoil',
   };
 };
 

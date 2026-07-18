@@ -9,6 +9,7 @@ import type { ConditionData } from '../utils/condition';
 import {
   commentElSelector,
   conditionElSelector,
+  foilElSelector,
   getWebsiteRows,
   languageElSelector,
   priceElSelector,
@@ -23,6 +24,7 @@ export type BaseColumnMapping = {
   language: string | undefined,
   condition: string | undefined,
   isSigned: string | undefined,
+  isFoil: string | undefined,
   comment: string | undefined,
   quantity: string | undefined,
   price: string | undefined,
@@ -43,6 +45,7 @@ export type CommonParsedRowFields = {
     data: ConditionData,
   },
   isSigned: boolean,
+  isFoil: boolean,
   comment: string,
   quantity: number,
   price: number,
@@ -157,6 +160,8 @@ class GenericGameManager<
       condition,
       isSigned: !!columnMapping['isSigned']
         && parseBoolean(String(rawRowData[columnMapping['isSigned']]), ['signed']),
+      isFoil: !!columnMapping['isFoil']
+        && parseBoolean(String(rawRowData[columnMapping['isFoil']]), ['foil']),
       comment: columnMapping['comment'] ? String(rawRowData[columnMapping['comment']]) : '',
       quantity: columnMapping['quantity'] ? (Number(rawRowData[columnMapping['quantity']]) || 0) : 0,
       price: columnMapping['price'] ? (Number(rawRowData[columnMapping['price']]) || 0) : 0,
@@ -234,6 +239,11 @@ class GenericGameManager<
     commentEl.value = row.comment;
     quantityEl.value = row.quantity.toString();
     priceEl.value = row.price.toFixed(2);
+    // Foil is optional and game-dependent: only games whose Bulk Listing rows
+    // expose the checkbox (MTG, Lorcana, SWU, …) have it. Query from resolvedEl
+    // (the possibly-duplicated row) and skip games that don't render it.
+    const foilEl = resolvedEl.querySelector(foilElSelector);
+    if (foilEl instanceof HTMLInputElement) foilEl.checked = row.isFoil;
 
     return Promise.resolve(resolvedEl);
   }

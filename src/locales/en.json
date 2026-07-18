@@ -80,6 +80,9 @@
                     "isSigned": {
                         "label": "Signed Column"
                     },
+                    "isFoil": {
+                        "label": "Foil Column"
+                    },
                     "comment": {
                         "label": "Comment Column"
                     },
@@ -96,6 +99,7 @@
                     "language": "Language",
                     "condition": "Condition",
                     "isSigned": "Signed",
+                    "isFoil": "Foil",
                     "comment": "Comment",
                     "quantity": "Quantity",
                     "price": "Price"
@@ -105,14 +109,10 @@
                 "importCsvForm": {
                     "set": {
                         "label": "Set Column"
-                    },
-                    "isFoil": {
-                        "label": "Foil Column"
                     }
                 },
                 "selectRowsFormTable": {
-                    "set": "Set",
-                    "isFoil": "Foil"
+                    "set": "Set"
                 }
             }
         }
