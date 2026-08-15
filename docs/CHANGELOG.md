@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.4.2] 2026-08-15
+Fork-only release. Two bugs that made a second import on the same page silently
+fail, both from memoizing a zero-argument function that reads the live DOM —
+`memoize`'s default cache key is `arguments_[0]`, so one `undefined` key caches
+the first answer for the lifetime of the page.
+
+### Bugfixes
+- `getWebsiteRows` is no longer memoized. The bulk form re-renders its table
+  whenever the expansion or filters change, so the cached row list went stale
+  and a second import matched the CSV against rows that were on screen during
+  the first one — every card present came back unmatched and greyed out.
+- The injected button is mounted with `autoMount()` instead of
+  `autoMount({ once: true })`. With `once`, wxt stops observing after the anchor
+  (`div#BulkAccordion`) disappears, so the button vanished on the first filter
+  change and only a page reload brought it back.
+- `getAvailableLanguages` / `matchLanguage` are no longer memoized either.
+  Precautionary — same defect class, and the stale value there is worse: the
+  impl returns `[]` when the language select is absent, which would pin `[]`
+  permanently and list every card in the fallback language.
+
 ## [1.4.1] 2026-06-20
 Note: version tag `1.4.0` was skipped due to a submission issue - it would be the same as this one.
 

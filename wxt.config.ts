@@ -11,6 +11,14 @@ export default defineConfig({
   manifest: {
     name: 'Cardmarket Bulk Import',
     default_locale: 'en',
+    // Explicit add-on ID so the build can be signed for permanent Firefox
+    // installation (AMO unlisted / self-distribution requires a stable ID).
+    browser_specific_settings: {
+      gecko: {
+        id: 'cardmarket-bulk-import@jannikhenke.dev',
+        strict_min_version: '109.0',
+      },
+    },
   },
   zip: {
     sourcesRoot: 'src',

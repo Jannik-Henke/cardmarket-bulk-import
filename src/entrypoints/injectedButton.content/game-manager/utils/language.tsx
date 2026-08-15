@@ -19,7 +19,6 @@ import {
   ID,
   TH,
 } from 'country-flag-icons/react/3x2';
-import memoize from 'memoize';
 
 import { compareNormalized } from '../../../../utils';
 
@@ -180,7 +179,24 @@ function getAvailableLanguagesImpl() {
   return languages;
 }
 
-export const getAvailableLanguages = memoize(getAvailableLanguagesImpl);
+/**
+ * NOT memoized, for the same reason `getWebsiteRows` no longer is: it reads
+ * the live form, takes no arguments, and memoize's default cache key is
+ * `arguments_[0]` — so one `undefined` key caches the first answer forever.
+ *
+ * Here the stale answer is worse than a stale row list. The impl returns `[]`
+ * when the language `<select>` is absent or empty, so a single call made
+ * before the bulk table has rendered would pin `[]` permanently, and
+ * `matchLanguage` would then fall back to `mkmLanguages[0]` for EVERY row —
+ * silently listing every card in the wrong language, with nothing on screen
+ * to say so.
+ *
+ * PRECAUTIONARY rather than an observed failure: `matchLanguage` is only
+ * reached from `parseRow` at import time, by which point the form is showing.
+ * The read is a `querySelector` over one element per CSV row; the memo was
+ * never buying anything worth this risk.
+ */
+export const getAvailableLanguages = getAvailableLanguagesImpl;
 
 function matchLanguageImpl(inputLanguage?: string): { matched: boolean, data: LanguageData } {
   const availableLanguages = getAvailableLanguages();
@@ -198,4 +214,8 @@ function matchLanguageImpl(inputLanguage?: string): { matched: boolean, data: La
   };
 }
 
-export const matchLanguage = memoize(matchLanguageImpl);
+// Also un-memoized: its result is DERIVED from `getAvailableLanguages`, so
+// caching it per input string would re-introduce exactly the staleness the
+// change above removes — a fallback computed from an empty language list would
+// outlive the list that produced it.
+export const matchLanguage = matchLanguageImpl;

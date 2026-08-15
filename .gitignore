@@ -11,3 +11,12 @@ node_modules
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+# AMO signing. `.env.signing` holds the JWT issuer/secret from
+# https://addons.mozilla.org/developers/addon/api/key/ — never commit it.
+.env.signing
+.env
+
+# Signed .xpi output from `web-ext sign`. A signed build is a release artifact,
+# not source, and it is several MB per version.
+web-ext-artifacts/
